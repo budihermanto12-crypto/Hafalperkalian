@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Hafalan Perkalian - Metode 3 Jam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0B0F19',
+                            card: '#151C2C',
+                            border: '#2A364F',
+                            accent: '#6366F1',
+                            neonGreen: '#10B981',
+                            neonYellow: '#F59E0B',
+                            neonRose: '#F43F5E',
+                            cyan: '#06B6D4'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace']
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'bounce-short': 'bounceShort 0.5s ease infinite alternate'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)' },
+                            '50%': { boxShadow: '0 0 30px rgba(99, 102, 241, 0.8)' }
+                        },
+                        bounceShort: {
+                            '0%': { transform: 'translateY(0)' },
+                            '100%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #F3F4F6;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #A855F7 0%, #6366F1 50%, #06B6D4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glow-box {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
+        }
+
+        .glow-green {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .timer-bar {
+            transition: width 0.1s linear;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificateModal, #certificateModal * {
+                visibility: visible;
+            }
+            #certificateModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-brand-accent selection:text-white pb-10">
+
+    <header class="border-b border-brand-border bg-brand-card/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-accent to-brand-cyan flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tight gradient-text">MATH MASTER</h1>
+                    <p class="text-xs text-gray-400 font-semibold">Hafal Perkalian 3 Jam</p>
+                </div>
+            </div>
+
+            <!-- Student Profile Badge -->
+            <div class="flex items-center space-x-3">
+                <button onclick="openScheduleModal()" class="px-3 py-1.5 rounded-lg bg-brand-border/60 hover:bg-brand-border text-brand-cyan text-xs md:text-sm font-semibold transition flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-base"></i>
+                    <span class="hidden sm:inline">Jadwal Belajar</span>
+                </button>
+                <div class="flex items-center gap-2 bg-brand-card px-3 py-1.5 rounded-xl border border-brand-border">
+                    <i class="fa-solid fa-user-circle text-brand-accent text-lg"></i>
+                    <span id="studentDisplayName" class="text-sm font-bold max-w-[100px] sm:max-w-[150px] truncate">Siswa</span>
+                    <button onclick="editStudentName()" class="text-xs text-gray-400 hover:text-white ml-1">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboardView" class="space-y-6">
+            
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-card via-brand-card to-indigo-950/40 border border-brand-border p-6 md:p-8 glow-box">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="inline-block px-3 py-1 rounded-full bg-brand-accent/20 text-brand-accent text-xs font-bold uppercase tracking-wider mb-3 border border-brand-accent/30">
+                        ⚡ Metode 9 Langkah Smart
+                    </span>
+                    <h2 class="text-3xl md:text-5xl font-black text-white leading-tight mb-3">
+                        Hafal Perkalian <span class="gradient-text">Cuma 3 Jam!</span>
+                    </h2>
+                    <p class="text-gray-300 text-sm md:text-base leading-relaxed mb-6">
+                        Tanpa perlu menghafal 100 tabel rumit sekaligus. Cukup ikuti urutan langkah cerdas di bawah ini secara bertahap! Lulus uji timer 3 detik untuk membuka bab berikutnya.
+                    </p>
+
+                    <!-- Global Progress Bar -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs md:text-sm font-bold">
+                            <span class="text-gray-400">Progres Kelulusan Total</span>
+                            <span id="overallProgressText" class="text-brand-neonGreen">0 / 9 Langkah</span>
+                        </div>
+                        <div class="w-full bg-brand-border/80 h-3.5 rounded-full overflow-hidden p-0.5">
+                            <div id="overallProgressBar" class="bg-gradient-to-r from-brand-accent via-brand-cyan to-brand-neonGreen h-full rounded-full transition-all duration-500 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Abstract Visual Shapes -->
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute right-12 top-6 text-brand-accent/10 text-9xl font-black pointer-events-none select-none">
+                    3H
+                </div>
+            </div>
+
+            <!-- Steps Grid -->
+            <div>
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-brand-accent"></i>
+                    Peta Jalan Hafalan
+                </h3>
+                <div id="stepsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Steps will be injected dynamically via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- STUDY / STEP VIEW -->
+        <div id="stepView" class="hidden space-y-6">
+            <!-- Navigation Header -->
+            <div class="flex items-center justify-between">
+                <button onclick="showDashboard()" class="px-4 py-2 rounded-xl bg-brand-card hover:bg-brand-border text-gray-300 font-bold text-sm transition flex items-center gap-2 border border-brand-border">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+                </button>
+                <div id="stepBadgeHeader" class="px-3 py-1 rounded-full bg-brand-accent/20 text-brand-accent text-xs font-extrabold border border-brand-accent/40">
+                    Langkah 1 dari 9
+                </div>
+            </div>
+
+            <!-- Theory Card -->
+            <div class="bg-brand-card border border-brand-border rounded-3xl p-6 md:p-8 space-y-6 glow-box">
+                <div>
+                    <span id="stepCategory" class="text-xs font-bold text-brand-cyan uppercase tracking-wider">Metode Smart</span>
+                    <h2 id="stepTitle" class="text-2xl md:text-4xl font-black text-white mt-1">
+                        <!-- Dynamic Step Title -->
+                    </h2>
+                </div>
+
+                <!-- Smart Explanation Box -->
+                <div class="p-4 md:p-5 rounded-2xl bg-indigo-950/40 border border-brand-accent/30 space-y-2">
+                    <h4 class="font-bold text-brand-neonYellow flex items-center gap-2 text-sm md:text-base">
+                        <i class="fa-solid fa-lightbulb"></i> Triks Smart Hafalan:
+                    </h4>
+                    <p id="stepTheory" class="text-gray-200 text-sm md:text-base leading-relaxed">
+                        <!-- Dynamic Theory -->
+                    </p>
+                </div>
+
+                <!-- Table Preview -->
+                <div>
+                    <h4 class="font-bold text-gray-300 text-sm mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-accent"></i> Daftar Hafalan Langkah Ini:
+                    </h4>
+                    <div id="stepItemsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <!-- Dynamic List of multiplications -->
+                    </div>
+                </div>
+
+                <!-- Action Ready Button -->
+                <div class="pt-4 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-xs text-gray-400 flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-brand-neonRose text-base"></i>
+                        <span>Aturan Ujian: <strong>3 Detik</strong> per Soal. Kuis Cepat & Akurat!</span>
+                    </div>
+                    <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-accent to-brand-cyan hover:opacity-95 text-white font-black text-lg shadow-xl hover:scale-105 transition transform flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-play"></i> Saya Sudah Hafal! Mulai Tes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUIZ / TIMER TEST VIEW -->
+        <div id="quizView" class="hidden min-h-[70vh] flex flex-col justify-center items-center">
+            <div class="w-full max-w-xl bg-brand-card border-2 border-brand-accent/50 rounded-3xl p-6 md:p-8 space-y-6 glow-box relative overflow-hidden">
+                
+                <!-- Quiz Progress Bar Header -->
+                <div class="flex justify-between items-center text-xs font-bold text-gray-400">
+                    <span id="quizQuestionTracker">Soal 1 dari 10</span>
+                    <span class="text-brand-neonRose font-extrabold flex items-center gap-1">
+                        <i class="fa-solid fa-clock"></i> Max 3 Detik / Soal
+                    </span>
+                </div>
+
+                <!-- Countdown Bar -->
+                <div class="w-full bg-brand-border h-3 rounded-full overflow-hidden">
+                    <div id="quizTimerBar" class="bg-brand-neonRose h-full timer-bar w-full"></div>
+                </div>
+
+                <!-- Question Display -->
+                <div class="text-center py-6">
+                    <span class="text-xs font-semibold text-gray-400 block mb-2">Berapakah hasil dari:</span>
+                    <div id="quizQuestionText" class="text-6xl md:text-8xl font-black tracking-tight text-white font-mono animate-bounce-short">
+                        8 × 7
+                    </div>
+                </div>
+
+                <!-- Multiple Choice Options -->
+                <div id="quizOptionsGrid" class="grid grid-cols-2 gap-4">
+                    <!-- Option Buttons Injected via JS -->
+                </div>
+
+                <!-- Timeout / Feedback Notification Overlay -->
+                <div id="quizFeedback" class="hidden absolute inset-0 bg-brand-dark/95 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center space-y-4 z-20">
+                    <div id="quizFeedbackIcon" class="text-6xl">
+                        ❌
+                    </div>
+                    <h3 id="quizFeedbackTitle" class="text-2xl font-black text-white">
+                        Waktu Habis!
+                    </h3>
+                    <p id="quizFeedbackSub" class="text-gray-300 text-sm max-w-xs">
+                        Hafalan harus spontan di bawah 3 detik. Jangan ragu, yuk coba lagi!
+                    </p>
+                    <button onclick="restartQuiz()" class="px-6 py-3 rounded-xl bg-brand-accent text-white font-bold text-sm hover:scale-105 transition">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Coba Lagi Langkah Ini
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP SUCCESS CONGRATS VIEW -->
+        <div id="successStepView" class="hidden min-h-[60vh] flex flex-col justify-center items-center text-center space-y-6">
+            <div class="w-24 h-24 rounded-full bg-brand-neonGreen/20 border-2 border-brand-neonGreen flex items-center justify-center text-brand-neonGreen text-5xl glow-green animate-bounce">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-3xl md:text-5xl font-black text-white">Langkah Berhasil Tuntas!</h2>
+                <p class="text-gray-300 text-base max-w-md mx-auto">
+                    Luar biasa! Hafalan kamu sangat cepat dan akurat. Checkpoint telah tersimpan!
+                </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                <button onclick="showDashboard()" class="px-6 py-3.5 rounded-2xl bg-brand-card hover:bg-brand-border text-white font-bold text-sm border border-brand-border transition">
+                    Ke Dashboard
+                </button>
+                <button id="nextStepBtn" onclick="goToNextStep()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-brand-neonGreen to-brand-cyan text-brand-dark font-black text-base shadow-lg hover:scale-105 transition">
+                    Lanjut Langkah Berikutnya <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SCHEDULE REMINDER MODAL -->
+    <div id="scheduleModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-brand-card border border-brand-border w-full max-w-lg rounded-3xl p-6 md:p-8 space-y-6 relative glow-box">
+            <button onclick="closeScheduleModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-brand-cyan/20 border border-brand-cyan/40 flex items-center justify-center text-brand-cyan text-2xl">
+                    <i class="fa-regular fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">Jadwal Belajar & Target 3 Jam</h3>
+                    <p class="text-xs text-gray-400">Rencana efektif agar lulus dalam 3 hari (1 Jam/Hari)</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <!-- Day 1 Plan -->
+                <div class="p-3.5 rounded-2xl bg-brand-dark/60 border border-brand-border flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-brand-cyan uppercase">Hari Ke-1 (60 Menit)</span>
+                        <h4 class="font-bold text-white text-sm">Langkah 1, 2, dan 3</h4>
+                        <p class="text-xs text-gray-400">Perkalian 1, 10, 2, dan 9</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg bg-brand-border text-xs text-gray-300 font-mono font-bold">1 Jam</span>
+                </div>
+
+                <!-- Day 2 Plan -->
+                <div class="p-3.5 rounded-2xl bg-brand-dark/60 border border-brand-border flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-brand-neonYellow uppercase">Hari Ke-2 (60 Menit)</span>
+                        <h4 class="font-bold text-white text-sm">Langkah 4, 5, dan 6</h4>
+                        <p class="text-xs text-gray-400">Perkalian 5, Kuadrat, dan Perkalian 3</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg bg-brand-border text-xs text-gray-300 font-mono font-bold">1 Jam</span>
+                </div>
+
+                <!-- Day 3 Plan -->
+                <div class="p-3.5 rounded-2xl bg-brand-dark/60 border border-brand-border flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-brand-neonRose uppercase">Hari Ke-3 (60 Menit)</span>
+                        <h4 class="font-bold text-white text-sm">Langkah 7, 8, dan 9 + Ujian Akhir</h4>
+                        <p class="text-xs text-gray-400">Perkalian 4, 6, 7 & Klaim Sertifikat</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg bg-brand-border text-xs text-gray-300 font-mono font-bold">1 Jam</span>
+                </div>
+            </div>
+
+            <!-- Reminder Setting Form -->
+            <div class="p-4 rounded-2xl bg-indigo-950/30 border border-brand-accent/20 space-y-3">
+                <label class="text-xs font-bold text-gray-300 block">Set Pengingat Waktu Belajar Harian (Browser Notification):</label>
+                <div class="flex gap-2">
+                    <input type="time" id="reminderTimeInput" value="16:00" class="bg-brand-dark border border-brand-border text-white text-sm rounded-xl px-3 py-2 flex-grow focus:outline-none focus:border-brand-accent">
+                    <button onclick="saveReminderSchedule()" class="px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 text-white rounded-xl text-xs font-bold transition">
+                        Simpan Jam
+                    </button>
+                </div>
+                <p id="scheduleSavedNotice" class="text-[11px] text-brand-neonGreen hidden">✓ Pengingat tersimpan di perangkat ini.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CERTIFICATE MODAL -->
+    <div id="certificateModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex justify-center items-center p-4 overflow-y-auto">
+        <div class="bg-white text-gray-900 w-full max-w-3xl rounded-3xl p-8 space-y-6 relative border-8 border-yellow-500 shadow-2xl my-auto">
+            
+            <button onclick="closeCertificateModal()" class="no-print absolute top-4 right-4 text-gray-500 hover:text-black text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Certificate Frame -->
+            <div class="border-2 border-yellow-600 p-6 rounded-2xl text-center space-y-6 bg-gradient-to-b from-amber-50/50 to-white">
+                
+                <div class="flex justify-between items-center px-4">
+                    <div class="text-left">
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-yellow-700">Official Certificate</span>
+                        <p class="text-xs text-gray-500 font-bold">MATH MASTER EDUCATION</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-white font-black text-xl">
+                        👑
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-3xl md:text-5xl font-black text-gray-900 tracking-tight font-serif">SERTIFIKAT KELULUSAN</h2>
+                    <p class="text-sm font-semibold text-gray-600">Diberikan secara sah atas pencapaian luar biasa dalam:</p>
+                    <p class="text-lg font-bold text-indigo-900 uppercase tracking-wide">Hafalan Perkalian Metode Smart 3 Jam</p>
+                </div>
+
+                <div class="py-4 border-y border-yellow-200">
+                    <p class="text-xs text-gray-500 font-medium">Diberikan Kepada Siswa Master:</p>
+                    <h1 id="certStudentName" class="text-3xl md:text-5xl font-black text-amber-600 font-serif my-2 underline decoration-yellow-400">
+                        NAMA SISWA
+                    </h1>
+                    <p class="text-xs text-gray-600 max-w-lg mx-auto leading-relaxed">
+                        Telah berhasil menghafal seluruh gabungan perkalian 1 hingga 10 menggunakan respons cepat teruji di bawah 3 detik per soal tanpa kesalahan.
+                    </p>
+                </div>
+
+                <div class="flex justify-between items-end px-6 pt-4 text-xs text-gray-500">
+                    <div class="text-left">
+                        <p id="certDateText" class="font-bold text-gray-800">Tanggal: 18 Oktober 2026</p>
+                        <p>Status: LULUS VERIFIKASI (100%)</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-24 border-b border-gray-400 mb-1"></div>
+                        <p class="font-bold text-gray-800">Tim Evaluator Math Master</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="no-print flex justify-end gap-3 pt-2">
+                <button onclick="window.print()" class="px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center text-xs text-gray-500 py-4 border-t border-brand-border/40">
+        <p>© 2026 Math Master Education • Media Pembelajaran Hafalan Perkalian Cepat</p>
+    </footer>
+
+    <script>
+        const SMART_STEPS = [
+            {
+                id: 1,
+                title: "Perkalian 1 dan 10",
+                category: "Langkah 1 - Paling Mudah",
+                theory: "Perkalian 1 hasilnya adalah <strong>angka itu sendiri</strong> (misal 7×1 = 7). Perkalian 10 tinggal <strong>menambahkan angka 0</strong> di belakangnya (misal 7×10 = 70). Ada 10 perkalian di 1 & 9 perkalian di 10.",
+                items: [
+                    {q: "1 × 1", a: 1}, {q: "2 × 1", a: 2}, {q: "3 × 1", a: 3}, {q: "4 × 1", a: 4}, {q: "5 × 1", a: 5},
+                    {q: "6 × 1", a: 6}, {q: "7 × 1", a: 7}, {q: "8 × 1", a: 8}, {q: "9 × 1", a: 9}, {q: "10 × 1", a: 10},
+                    {q: "2 × 10", a: 20}, {q: "3 × 10", a: 30}, {q: "4 × 10", a: 40}, {q: "5 × 10", a: 50},
+                    {q: "6 × 10", a: 60}, {q: "7 × 10", a: 70}, {q: "8 × 10", a: 80}, {q: "9 × 10", a: 90}, {q: "10 × 10", a: 100}
+                ]
+            },
+            {
+                id: 2,
+                title: "Perkalian 2",
+                category: "Langkah 2 - Penjumlahan Ganda",
+                theory: "Perkalian 2 sama artinya dengan <strong>menjumlahkan angka tersebut dengan dirinya sendiri</strong>. Contoh: 3 × 2 = 3 + 3 = 6. Hanya ada 8 soal baru (dari 2×2 sampai 9×2)!",
+                items: [
+                    {q: "2 × 2", a: 4}, {q: "3 × 2", a: 6}, {q: "4 × 2", a: 8}, {q: "5 × 2", a: 10},
+                    {q: "6 × 2", a: 12}, {q: "7 × 2", a: 14}, {q: "8 × 2", a: 16}, {q: "9 × 2", a: 18}
+                ]
+            },
+            {
+                id: 3,
+                title: "Perkalian 9",
+                category: "Langkah 3 - Keajaiban Angka 9",
+                theory: "Hasil perkalian 9 selalu unik! <strong>Digit depan adalah (angka dikurang 1)</strong>, dan <strong>digit belakang adalah pelengkapnya agar jumlah digit = 9</strong>. Contoh: 6 × 9 ➔ 6-1 = 5, pelengkap 5 supaya jadi 9 adalah 4 ➔ Jadi <strong>54</strong>! Sisa 7 soal.",
+                items: [
+                    {q: "3 × 9", a: 27}, {q: "4 × 9", a: 36}, {q: "5 × 9", a: 45},
+                    {q: "6 × 9", a: 54}, {q: "7 × 9", a: 63}, {q: "8 × 9", a: 72}, {q: "9 × 9", a: 81}
+                ]
+            },
+            {
+                id: 4,
+                title: "Perkalian 5",
+                category: "Langkah 4 - Akhiran 0 atau 5",
+                theory: "Hasil perkalian 5 pasti <strong>berakhiran angka 0 atau 5</strong>. Jika dikali angka genap hasilnya berakhiran 0, jika dikali angka ganjil berakhiran 5. Hanya tersisa 7 soal baru!",
+                items: [
+                    {q: "3 × 5", a: 15}, {q: "4 × 5", a: 20}, {q: "5 × 5", a: 25},
+                    {q: "6 × 5", a: 30}, {q: "7 × 5", a: 35}, {q: "8 × 5", a: 40}
+                ]
+            },
+            {
+                id: 5,
+                title: "Perkalian Kuadrat",
+                category: "Langkah 5 - Angka Kembar",
+                theory: "Perkalian angka kembar/kuadrat sangat mudah dihafal secara berurutan. Di tahap ini cuma ada <strong>5 soal unik</strong>: 3×3 (9), 4×4 (16), 6×6 (36), 7×7 (49), dan 8×8 (64).",
+                items: [
+                    {q: "3 × 3", a: 9}, {q: "4 × 4", a: 16}, {q: "6 × 6", a: 36}, {q: "7 × 7", a: 49}, {q: "8 × 8", a: 64}
+                ]
+            },
+            {
+                id: 6,
+                title: "Perkalian 3",
+                category: "Langkah 6 - Sisa 4 Soal",
+                theory: "Karena perkalian lain sudah tuntas di langkah sebelumnya, untuk perkalian 3 kamu <strong>CUMA PERLU menghafal 4 soal ini</strong>: 4×3=12, 6×3=18, 7×3=21, 8×3=24!",
+                items: [
+                    {q: "4 × 3", a: 12}, {q: "6 × 3", a: 18}, {q: "7 × 3", a: 21}, {q: "8 × 3", a: 24}
+                ]
+            },
+            {
+                id: 7,
+                title: "Perkalian 4",
+                category: "Langkah 7 - Sisa 3 Soal",
+                theory: "Makin ke belakang makin sedikit! Untuk perkalian 4 kamu <strong>CUMA menghafal 3 soal saja</strong>: 6×4=24, 7×4=28, 8×4=32!",
+                items: [
+                    {q: "6 × 4", a: 24}, {q: "7 × 4", a: 28}, {q: "8 × 4", a: 32}
+                ]
+            },
+            {
+                id: 8,
+                title: "Perkalian 6",
+                category: "Langkah 8 - Sisa 2 Soal",
+                theory: "Luar biasa! Untuk perkalian 6 kamu <strong>TINGGAL menghafal 2 soal ini</strong>: 7×6 = 42 dan 8×6 = 48!",
+                items: [
+                    {q: "7 × 6", a: 42}, {q: "8 × 6", a: 48}
+                ]
+            },
+            {
+                id: 9,
+                title: "Perkalian 7",
+                category: "Langkah 9 - Puncak Hafalan (1 Soal!)",
+                theory: "Selamat tiba di langkah terakhir! Semua perkalian sudah kamu kuasai kecuali <strong>SATU SOAL TERAKHIR INI</strong>: 8 × 7 = 56! Hafal ini dan kamu resmi jadi Master Perkalian!",
+                items: [
+                    {q: "8 × 7", a: 56}
+                ]
+            }
+        ];
+
+        let appState = {
+            studentName: "Siswa Master",
+            unlockedStep: 1, // Progress Checkpoint (1 to 9)
+            completedSteps: [], // List of completed step IDs
+            currentStepId: 1,
+            quizQuestions: [],
+            currentQuestionIdx: 0,
+            timerInterval: null,
+            timeRemainingMs: 3000,
+            quizStartTime: 0
+        };
+
+        const STORAGE_KEY = "MATH_MASTER_CHECKPOINT_DATA_2026";
+
+        window.onload = function() {
+            loadStateFromStorage();
+            renderDashboard();
+            updateHeaderProfile();
+        };
+
+        function loadStateFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appState.studentName = parsed.studentName || "Siswa Master";
+                    appState.unlockedStep = parsed.unlockedStep || 1;
+                    appState.completedSteps = parsed.completedSteps || [];
+                }
+            } catch(e) {
+                console.error("Gagal memuat checkpoint", e);
+            }
+        }
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    studentName: appState.studentName,
+                    unlockedStep: appState.unlockedStep,
+                    completedSteps: appState.completedSteps
+                }));
+            } catch(e) {
+                console.error("Gagal menyimpan checkpoint", e);
+            }
+        }
+
+        function updateHeaderProfile() {
+            document.getElementById('studentDisplayName').innerText = appState.studentName;
+        }
+
+        function editStudentName() {
+            const newName = prompt("Masukkan nama lengkap siswa untuk sertifikat:", appState.studentName);
+            if (newName && newName.trim() !== "") {
+                appState.studentName = newName.trim();
+                updateHeaderProfile();
+                saveStateToStorage();
+            }
+        }
+
+        function renderDashboard() {
+            const grid = document.getElementById('stepsGrid');
+            grid.innerHTML = '';
+
+            let completedCount = appState.completedSteps.length;
+            document.getElementById('overallProgressText').innerText = `${completedCount} / 9 Langkah Selesai`;
+            document.getElementById('overallProgressBar').style.width = `${(completedCount / 9) * 100}%`;
+
+            SMART_STEPS.forEach(step => {
+                const isUnlocked = step.id <= appState.unlockedStep;
+                const isCompleted = appState.completedSteps.includes(step.id);
+
+                const card = document.createElement('div');
+                card.className = `rounded-2xl p-5 border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${
+                    isCompleted
+                        ? 'bg-brand-card/90 border-brand-neonGreen/40 hover:border-brand-neonGreen'
+                        : isUnlocked
+                            ? 'bg-brand-card border-brand-border hover:border-brand-accent glow-box cursor-pointer'
+                            : 'bg-brand-dark/50 border-brand-border/40 opacity-60'
+                }`;
+
+                let badgeHTML = '';
+                if (isCompleted) {
+                    badgeHTML = `<span class="px-2.5 py-1 rounded-full bg-brand-neonGreen/20 text-brand-neonGreen text-xs font-bold border border-brand-neonGreen/30 flex items-center gap-1"><i class="fa-solid fa-check"></i> Selesai</span>`;
+                } else if (isUnlocked) {
+                    badgeHTML = `<span class="px-2.5 py-1 rounded-full bg-brand-accent/20 text-brand-accent text-xs font-bold border border-brand-accent/30">Terbuka</span>`;
+                } else {
+                    badgeHTML = `<span class="px-2.5 py-1 rounded-full bg-gray-800 text-gray-400 text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-lock"></i> Terkunci</span>`;
+                }
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-gray-400">Langkah 0${step.id}</span>
+                            ${badgeHTML}
+                        </div>
+                        <h4 class="text-lg font-black text-white leading-snug">${step.title}</h4>
+                        <p class="text-xs text-gray-400 line-clamp-2">${step.theory.replace(/<\/?[^>]+(>|$)/g, "")}</p>
+                    </div>
+
+                    <div class="pt-4 mt-2 border-t border-brand-border/40 flex justify-between items-center">
+                        <span class="text-[11px] font-mono text-brand-cyan font-bold">${step.items.length} Soal Hafalan</span>
+                        ${isUnlocked ? `
+                            <button onclick="openStep(${step.id})" class="px-3.5 py-1.5 rounded-xl ${isCompleted ? 'bg-brand-border hover:bg-brand-border/80 text-white' : 'bg-brand-accent hover:bg-brand-accent/90 text-white'} text-xs font-extrabold transition">
+                                ${isCompleted ? 'Ulangi' : 'Mulai'} <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </button>
+                        ` : `
+                            <span class="text-xs text-gray-500 font-semibold"><i class="fa-solid fa-lock text-xs"></i> Selesaikan S-0${step.id - 1}</span>
+                        `}
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // If all 9 steps completed, show Certificate banner button on top
+            if (completedCount === 9) {
+                const certBanner = document.createElement('div');
+                certBanner.className = 'col-span-1 md:col-span-2 lg:col-span-3 p-6 rounded-3xl bg-gradient-to-r from-yellow-600/30 via-amber-500/20 to-yellow-600/30 border-2 border-yellow-500/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left glow-green';
+                certBanner.innerHTML = `
+                    <div class="space-y-1">
+                        <span class="text-xs font-black uppercase text-yellow-400 tracking-wider">🏆 PENCAPAIAN TERTINGGI</span>
+                        <h3 class="text-2xl font-black text-white">Selamat! Seluruh 9 Langkah Tuntas</h3>
+                        <p class="text-xs text-gray-300">Kamu telah resmi menjadi Master Hafalan Perkalian. Ambil sertifikatmu sekarang!</p>
+                    </div>
+                    <button onclick="openCertificateModal()" class="px-6 py-3.5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-brand-dark font-black text-sm shadow-xl transition transform hover:scale-105 flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-award text-lg"></i> Lihat Sertifikat Kelulusan
+                    </button>
+                `;
+                grid.prepend(certBanner);
+            }
+        }
+
+        function openStep(stepId) {
+            appState.currentStepId = stepId;
+            const step = SMART_STEPS.find(s => s.id === stepId);
+
+            document.getElementById('stepBadgeHeader').innerText = `Langkah ${step.id} dari 9`;
+            document.getElementById('stepCategory').innerText = step.category;
+            document.getElementById('stepTitle').innerText = step.title;
+            document.getElementById('stepTheory').innerHTML = step.theory;
+
+            const itemsContainer = document.getElementById('stepItemsContainer');
+            itemsContainer.innerHTML = '';
+
+            step.items.forEach(item => {
+                const box = document.createElement('div');
+                box.className = 'p-3 rounded-xl bg-brand-dark/80 border border-brand-border text-center font-mono';
+                box.innerHTML = `
+                    <div class="text-xs text-gray-400">${item.q}</div>
+                    <div class="text-xl font-extrabold text-brand-neonGreen mt-0.5">= ${item.a}</div>
+                `;
+                itemsContainer.appendChild(box);
+            });
+
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('quizView').classList.add('hidden');
+            document.getElementById('successStepView').classList.add('hidden');
+            document.getElementById('stepView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showDashboard() {
+            clearInterval(appState.timerInterval);
+            renderDashboard();
+            document.getElementById('stepView').classList.add('hidden');
+            document.getElementById('quizView').classList.add('hidden');
+            document.getElementById('successStepView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function startQuiz() {
+            const step = SMART_STEPS.find(s => s.id === appState.currentStepId);
+            // Duplicate and shuffle questions to make test thorough
+            appState.quizQuestions = [...step.items].sort(() => Math.random() - 0.5);
+            appState.currentQuestionIdx = 0;
+
+            document.getElementById('stepView').classList.add('hidden');
+            document.getElementById('quizFeedback').classList.add('hidden');
+            document.getElementById('quizView').classList.remove('hidden');
+
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            clearInterval(appState.timerInterval);
+
+            const qData = appState.quizQuestions[appState.currentQuestionIdx];
+            const total = appState.quizQuestions.length;
+
+            document.getElementById('quizQuestionTracker').innerText = `Soal ${appState.currentQuestionIdx + 1} dari ${total}`;
+            document.getElementById('quizQuestionText').innerText = qData.q;
+
+            // Generate 4 Multiple Choice Options
+            const options = [qData.a];
+            while (options.length < 4) {
+                let fake = qData.a + (Math.floor(Math.random() * 7) - 3) * (Math.random() > 0.5 ? 1 : 2);
+                if (fake > 0 && !options.includes(fake)) {
+                    options.push(fake);
+                }
+            }
+            // Shuffle Options
+            options.sort(() => Math.random() - 0.5);
+
+            const optionsGrid = document.getElementById('quizOptionsGrid');
+            optionsGrid.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'py-4 px-6 rounded-2xl bg-brand-dark/90 hover:bg-brand-accent/20 border-2 border-brand-border hover:border-brand-accent text-white font-mono font-black text-2xl md:text-3xl transition transform active:scale-95 shadow-md';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt === qData.a);
+                optionsGrid.appendChild(btn);
+            });
+
+            // Start 3-Second Precision Countdown
+            const timerBar = document.getElementById('quizTimerBar');
+            timerBar.style.width = '100%';
+            
+            appState.timeRemainingMs = 3000;
+            const updateInterval = 50; // Update every 50ms for smooth animation
+
+            appState.timerInterval = setInterval(() => {
+                appState.timeRemainingMs -= updateInterval;
+                const percentage = Math.max(0, (appState.timeRemainingMs / 3000) * 100);
+                timerBar.style.width = `${percentage}%`;
+
+                if (appState.timeRemainingMs <= 0) {
+                    clearInterval(appState.timerInterval);
+                    handleQuizTimeout();
+                }
+            }, updateInterval);
+        }
+
+        function handleAnswer(isCorrect) {
+            clearInterval(appState.timerInterval);
+
+            if (isCorrect) {
+                appState.currentQuestionIdx++;
+                if (appState.currentQuestionIdx < appState.quizQuestions.length) {
+                    renderQuizQuestion();
+                } else {
+                    // Passed All Questions in Step
+                    handleStepSuccess();
+                }
+            } else {
+                showQuizFailedFeedback("Jawaban Kurang Tepat!", "Hafalan harus akurat dan tanpa ragu. Yuk, pelajari lagi trik smartnya!");
+            }
+        }
+
+        function handleQuizTimeout() {
+            showQuizFailedFeedback("Waktu 3 Detik Habis!", "Waktu berpikir terlalu lama! Kuis ini melatih hafalan spontan tanpa mikir.");
+        }
+
+        function showQuizFailedFeedback(title, desc) {
+            document.getElementById('quizFeedbackTitle').innerText = title;
+            document.getElementById('quizFeedbackSub').innerText = desc;
+            document.getElementById('quizFeedback').classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            document.getElementById('quizFeedback').classList.add('hidden');
+            startQuiz();
+        }
+
+        function handleStepSuccess() {
+            document.getElementById('quizView').classList.add('hidden');
+            document.getElementById('successStepView').classList.remove('hidden');
+
+            // Save Progress Checkpoint
+            if (!appState.completedSteps.includes(appState.currentStepId)) {
+                appState.completedSteps.push(appState.currentStepId);
+            }
+            if (appState.unlockedStep === appState.currentStepId && appState.unlockedStep < 9) {
+                appState.unlockedStep++;
+            }
+
+            saveStateToStorage();
+
+            // Trigger Confetti Animation
+            try {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            } catch(e) {}
+
+            // Handle next step button visibility
+            const nextBtn = document.getElementById('nextStepBtn');
+            if (appState.currentStepId < 9) {
+                nextBtn.innerHTML = `Lanjut Langkah 0${appState.currentStepId + 1} <i class="fa-solid fa-arrow-right ml-1"></i>`;
+                nextBtn.onclick = () => openStep(appState.currentStepId + 1);
+            } else {
+                nextBtn.innerHTML = `<i class="fa-solid fa-award"></i> Ambil Sertifikat Kelulusan`;
+                nextBtn.onclick = () => openCertificateModal();
+            }
+        }
+
+        function openScheduleModal() {
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('scheduleModal').classList.add('hidden');
+        }
+
+        function saveReminderSchedule() {
+            const timeVal = document.getElementById('reminderTimeInput').value;
+            localStorage.setItem('MATH_MASTER_REMINDER_TIME', timeVal);
+            const notice = document.getElementById('scheduleSavedNotice');
+            notice.classList.remove('hidden');
+            setTimeout(() => notice.classList.add('hidden'), 3000);
+        }
+
+        function openCertificateModal() {
+            document.getElementById('certStudentName').innerText = appState.studentName.toUpperCase();
+            
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('certDateText').innerText = `Tanggal: ${now.toLocaleDateString('id-ID', options)}`;
+
+            document.getElementById('certificateModal').classList.remove('hidden');
+
+            try {
+                confetti({
+                    particleCount: 200,
+                    spread: 100,
+                    origin: { y: 0.4 }
+                });
+            } catch(e) {}
+        }
+
+        function closeCertificateModal() {
+            document.getElementById('certificateModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
